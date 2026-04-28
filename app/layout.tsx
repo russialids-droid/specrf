@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   },
   verification: {
     yandex: '3a5617dca826f365',
+    google: 'l4mtPwdUSB3Qlh2VjQjSFKvZSZcIXbRdu_YRA6wWT2o',
   },
   robots: {
     index: true,
