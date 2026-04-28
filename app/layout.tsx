@@ -4,11 +4,14 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'СпецРФ — справочник специалистов по всей России',
   description: 'Найдите проверенного специалиста в вашем городе: юристы, психологи, репетиторы, врачи, электрики и другие. Реальные отзывы, честные цены.',
-  metadataBase: new URL('https://specrf.ru'),
+  metadataBase: new URL('https://specrf.pages.dev'),
   openGraph: {
     siteName: 'СпецРФ',
     locale: 'ru_RU',
     type: 'website',
+  },
+  verification: {
+    yandex: '3a5617dca826f365',
   },
   robots: {
     index: true,
