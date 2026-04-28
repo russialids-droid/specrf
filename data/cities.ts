@@ -1,8 +1,8 @@
 export interface City {
   slug: string
   name: string
-  nameRod: string // родительный падеж: "в Москве" → "Москвы"
-  namePred: string // предложный падеж: "в Москве"
+  nameRod: string
+  namePred: string
   region: string
   population: number
   lat: number
@@ -48,10 +48,11 @@ export const CITIES: City[] = [
   { slug: 'kirov', name: 'Киров', nameRod: 'Кирова', namePred: 'Кирове', region: 'Кировская область', population: 499688, lat: 58.5966, lng: 49.6562 },
   { slug: 'cheboksary', name: 'Чебоксары', nameRod: 'Чебоксар', namePred: 'Чебоксарах', region: 'Чувашская Республика', population: 496386, lat: 56.1439, lng: 47.2489 },
   { slug: 'tula', name: 'Тула', nameRod: 'Тулы', namePred: 'Туле', region: 'Тульская область', population: 491279, lat: 54.1961, lng: 37.6182 },
+  { slug: 'kaliningrad', name: 'Калининград', nameRod: 'Калининграда', namePred: 'Калининграде', region: 'Калининградская область', population: 489359, lat: 54.7065, lng: 20.5110 },
   { slug: 'kursk', name: 'Курск', nameRod: 'Курска', namePred: 'Курске', region: 'Курская область', population: 452976, lat: 51.7304, lng: 36.1938 },
   { slug: 'ulan-ude', name: 'Улан-Удэ', nameRod: 'Улан-Удэ', namePred: 'Улан-Удэ', region: 'Республика Бурятия', population: 435400, lat: 51.8272, lng: 107.6065 },
   { slug: 'stavropol', name: 'Ставрополь', nameRod: 'Ставрополя', namePred: 'Ставрополе', region: 'Ставропольский край', population: 450680, lat: 45.0440, lng: 41.9734 },
-  { slug: 'ulyanovsk-2', name: 'Тверь', nameRod: 'Твери', namePred: 'Твери', region: 'Тверская область', population: 424969, lat: 56.8587, lng: 35.9176 },
+  { slug: 'tver', name: 'Тверь', nameRod: 'Твери', namePred: 'Твери', region: 'Тверская область', population: 424969, lat: 56.8587, lng: 35.9176 },
   { slug: 'magnitogorsk', name: 'Магнитогорск', nameRod: 'Магнитогорска', namePred: 'Магнитогорске', region: 'Челябинская область', population: 413253, lat: 53.4028, lng: 59.0469 },
   { slug: 'ivanovo', name: 'Иваново', nameRod: 'Иванова', namePred: 'Иванове', region: 'Ивановская область', population: 400770, lat: 57.0004, lng: 40.9739 },
   { slug: 'bryansk', name: 'Брянск', nameRod: 'Брянска', namePred: 'Брянске', region: 'Брянская область', population: 399244, lat: 53.2434, lng: 34.3640 },
@@ -60,7 +61,58 @@ export const CITIES: City[] = [
   { slug: 'vladikavkaz', name: 'Владикавказ', nameRod: 'Владикавказа', namePred: 'Владикавказе', region: 'Республика Северная Осетия', population: 307676, lat: 43.0235, lng: 44.6820 },
   { slug: 'arkhangelsk', name: 'Архангельск', nameRod: 'Архангельска', namePred: 'Архангельске', region: 'Архангельская область', population: 331526, lat: 64.5401, lng: 40.5433 },
   { slug: 'chita', name: 'Чита', nameRod: 'Читы', namePred: 'Чите', region: 'Забайкальский край', population: 339597, lat: 52.0339, lng: 113.4994 },
-  { slug: 'kaliningrad', name: 'Калининград', nameRod: 'Калининграда', namePred: 'Калининграде', region: 'Калининградская область', population: 489359, lat: 54.7065, lng: 20.5110 },
+  { slug: 'smolensk', name: 'Смоленск', nameRod: 'Смоленска', namePred: 'Смоленске', region: 'Смоленская область', population: 325069, lat: 54.7818, lng: 32.0401 },
+  { slug: 'volzhskiy', name: 'Волжский', nameRod: 'Волжского', namePred: 'Волжском', region: 'Волгоградская область', population: 323705, lat: 48.7878, lng: 44.7540 },
+  { slug: 'kaluga', name: 'Калуга', nameRod: 'Калуги', namePred: 'Калуге', region: 'Калужская область', population: 321700, lat: 54.5293, lng: 36.2754 },
+  { slug: 'saransk', name: 'Саранск', nameRod: 'Саранска', namePred: 'Саранске', region: 'Республика Мордовия', population: 319038, lat: 54.1838, lng: 45.1749 },
+  { slug: 'cherepovets', name: 'Череповец', nameRod: 'Череповца', namePred: 'Череповце', region: 'Вологодская область', population: 312310, lat: 59.1223, lng: 37.9035 },
+  { slug: 'kurgan', name: 'Курган', nameRod: 'Кургана', namePred: 'Кургане', region: 'Курганская область', population: 305053, lat: 55.4408, lng: 65.3411 },
+  { slug: 'nizhnekamsk', name: 'Нижнекамск', nameRod: 'Нижнекамска', namePred: 'Нижнекамске', region: 'Республика Татарстан', population: 238061, lat: 55.6352, lng: 51.8131 },
+  { slug: 'murmansk', name: 'Мурманск', nameRod: 'Мурманска', namePred: 'Мурманске', region: 'Мурманская область', population: 282590, lat: 68.9585, lng: 33.0827 },
+  { slug: 'tambov', name: 'Тамбов', nameRod: 'Тамбова', namePred: 'Тамбове', region: 'Тамбовская область', population: 278013, lat: 52.7212, lng: 41.4523 },
+  { slug: 'kostroma', name: 'Кострома', nameRod: 'Костромы', namePred: 'Костроме', region: 'Костромская область', population: 271287, lat: 57.7676, lng: 40.9268 },
+  { slug: 'yakutsk', name: 'Якутск', nameRod: 'Якутска', namePred: 'Якутске', region: 'Республика Саха', population: 311760, lat: 62.0355, lng: 129.6755 },
+  { slug: 'groznyy', name: 'Грозный', nameRod: 'Грозного', namePred: 'Грозном', region: 'Чеченская Республика', population: 323000, lat: 43.3170, lng: 45.6981 },
+  { slug: 'nalchik', name: 'Нальчик', nameRod: 'Нальчика', namePred: 'Нальчике', region: 'Кабардино-Балкарская Республика', population: 240203, lat: 43.4846, lng: 43.6093 },
+  { slug: 'nizhny-tagil', name: 'Нижний Тагил', nameRod: 'Нижнего Тагила', namePred: 'Нижнем Тагиле', region: 'Свердловская область', population: 344662, lat: 57.9100, lng: 59.9800 },
+  { slug: 'sterlitamak', name: 'Стерлитамак', nameRod: 'Стерлитамака', namePred: 'Стерлитамаке', region: 'Республика Башкортостан', population: 274501, lat: 53.6342, lng: 55.9304 },
+  { slug: 'petrozavodsk', name: 'Петрозаводск', nameRod: 'Петрозаводска', namePred: 'Петрозаводске', region: 'Республика Карелия', population: 248790, lat: 61.7849, lng: 34.3469 },
+  { slug: 'ulan-ude2', name: 'Сыктывкар', nameRod: 'Сыктывкара', namePred: 'Сыктывкаре', region: 'Республика Коми', population: 225511, lat: 61.6689, lng: 50.8364 },
+  { slug: 'vladivostok2', name: 'Нижневартовск', nameRod: 'Нижневартовска', namePred: 'Нижневартовске', region: 'Ханты-Мансийский АО', population: 282478, lat: 60.9344, lng: 76.5540 },
+  { slug: 'orsk', name: 'Орск', nameRod: 'Орска', namePred: 'Орске', region: 'Оренбургская область', population: 228282, lat: 51.2292, lng: 58.4742 },
+  { slug: 'novocherkassk', name: 'Новочеркасск', nameRod: 'Новочеркасска', namePred: 'Новочеркасске', region: 'Ростовская область', population: 168578, lat: 47.4224, lng: 40.0939 },
+  { slug: 'abakan', name: 'Абакан', nameRod: 'Абакана', namePred: 'Абакане', region: 'Республика Хакасия', population: 187239, lat: 53.7157, lng: 91.4297 },
+  { slug: 'biysk', name: 'Бийск', nameRod: 'Бийска', namePred: 'Бийске', region: 'Алтайский край', population: 197817, lat: 52.5357, lng: 85.2136 },
+  { slug: 'maikop', name: 'Майкоп', nameRod: 'Майкопа', namePred: 'Майкопе', region: 'Республика Адыгея', population: 144590, lat: 44.6098, lng: 40.1069 },
+  { slug: 'pskov', name: 'Псков', nameRod: 'Пскова', namePred: 'Пскове', region: 'Псковская область', population: 209426, lat: 57.8194, lng: 28.3318 },
+  { slug: 'yoshkar-ola', name: 'Йошкар-Ола', nameRod: 'Йошкар-Олы', namePred: 'Йошкар-Оле', region: 'Республика Марий Эл', population: 275752, lat: 56.6344, lng: 47.8955 },
+  { slug: 'elista', name: 'Элиста', nameRod: 'Элисты', namePred: 'Элисте', region: 'Республика Калмыкия', population: 103749, lat: 46.3079, lng: 44.2560 },
+  { slug: 'vologda', name: 'Вологда', nameRod: 'Вологды', namePred: 'Вологде', region: 'Вологодская область', population: 312691, lat: 59.2181, lng: 39.8886 },
+  { slug: 'novorossiysk', name: 'Новороссийск', nameRod: 'Новороссийска', namePred: 'Новороссийске', region: 'Краснодарский край', population: 289000, lat: 44.7234, lng: 37.7688 },
+  { slug: 'komsomolsk-na-amure', name: 'Комсомольск-на-Амуре', nameRod: 'Комсомольска-на-Амуре', namePred: 'Комсомольске-на-Амуре', region: 'Хабаровский край', population: 243145, lat: 50.5500, lng: 137.0000 },
+  { slug: 'taganrog', name: 'Таганрог', nameRod: 'Таганрога', namePred: 'Таганроге', region: 'Ростовская область', population: 248851, lat: 47.2090, lng: 38.9350 },
+  { slug: 'naberezhnye-chelny', name: 'Набережные Челны', nameRod: 'Набережных Челнов', namePred: 'Набережных Челнах', region: 'Республика Татарстан', population: 532074, lat: 55.7434, lng: 52.4040 },
+  { slug: 'dzerzhinsk', name: 'Дзержинск', nameRod: 'Дзержинска', namePred: 'Дзержинске', region: 'Нижегородская область', population: 228752, lat: 56.2340, lng: 43.4613 },
+  { slug: 'shakhty', name: 'Шахты', nameRod: 'Шахт', namePred: 'Шахтах', region: 'Ростовская область', population: 231503, lat: 47.7080, lng: 40.2150 },
+  { slug: 'oriol', name: 'Орёл', nameRod: 'Орла', namePred: 'Орле', region: 'Орловская область', population: 299163, lat: 52.9700, lng: 36.0690 },
+  { slug: 'belgorod', name: 'Белгород', nameRod: 'Белгорода', namePred: 'Белгороде', region: 'Белгородская область', population: 391554, lat: 50.5950, lng: 36.5870 },
+  { slug: 'vladikavkaz2', name: 'Нальчик', nameRod: 'Нальчика', namePred: 'Нальчике', region: 'Кабардино-Балкарская Республика', population: 240203, lat: 43.4846, lng: 43.6093 },
+  { slug: 'volgodonsk', name: 'Волгодонск', nameRod: 'Волгодонска', namePred: 'Волгодонске', region: 'Ростовская область', population: 169201, lat: 47.5160, lng: 42.1530 },
+  { slug: 'rybinsk', name: 'Рыбинск', nameRod: 'Рыбинска', namePred: 'Рыбинске', region: 'Ярославская область', population: 186259, lat: 58.0500, lng: 38.8500 },
+  { slug: 'petropavlovsk-kamchatskiy', name: 'Петропавловск-Камчатский', nameRod: 'Петропавловска-Камчатского', namePred: 'Петропавловске-Камчатском', region: 'Камчатский край', population: 179586, lat: 53.0452, lng: 158.6491 },
+  { slug: 'syktyvkar', name: 'Сыктывкар', nameRod: 'Сыктывкара', namePred: 'Сыктывкаре', region: 'Республика Коми', population: 225511, lat: 61.6689, lng: 50.8364 },
+  { slug: 'nizhniy-novgorod2', name: 'Дербент', nameRod: 'Дербента', namePred: 'Дербенте', region: 'Республика Дагестан', population: 126048, lat: 42.0600, lng: 48.2900 },
+  { slug: 'anapa', name: 'Анапа', nameRod: 'Анапы', namePred: 'Анапе', region: 'Краснодарский край', population: 79953, lat: 44.8950, lng: 37.3182 },
+  { slug: 'gelendzhik', name: 'Геленджик', nameRod: 'Геленджика', namePred: 'Геленджике', region: 'Краснодарский край', population: 54869, lat: 44.5622, lng: 38.0773 },
+  { slug: 'armavir', name: 'Армавир', nameRod: 'Армавира', namePred: 'Армавире', region: 'Краснодарский край', population: 188803, lat: 44.9890, lng: 41.1240 },
+  { slug: 'zlatoust', name: 'Златоуст', nameRod: 'Златоуста', namePred: 'Златоусте', region: 'Челябинская область', population: 163000, lat: 55.1730, lng: 59.6670 },
+  { slug: 'miass', name: 'Миасс', nameRod: 'Миасса', namePred: 'Миассе', region: 'Челябинская область', population: 148000, lat: 55.0500, lng: 60.1000 },
+  { slug: 'rubtsovsk', name: 'Рубцовск', nameRod: 'Рубцовска', namePred: 'Рубцовске', region: 'Алтайский край', population: 140000, lat: 51.5000, lng: 81.2000 },
+  { slug: 'balashikha', name: 'Балашиха', nameRod: 'Балашихи', namePred: 'Балашихе', region: 'Московская область', population: 507366, lat: 55.7964, lng: 37.9383 },
+  { slug: 'khimki', name: 'Химки', nameRod: 'Химок', namePred: 'Химках', region: 'Московская область', population: 257000, lat: 55.8889, lng: 37.4297 },
+  { slug: 'podolsk', name: 'Подольск', nameRod: 'Подольска', namePred: 'Подольске', region: 'Московская область', population: 305837, lat: 55.4310, lng: 37.5440 },
+  { slug: 'mytishchi', name: 'Мытищи', nameRod: 'Мытищ', namePred: 'Мытищах', region: 'Московская область', population: 235504, lat: 55.9100, lng: 37.7300 },
+  { slug: 'lyubertsy', name: 'Люберцы', nameRod: 'Люберец', namePred: 'Люберцах', region: 'Московская область', population: 186000, lat: 55.6760, lng: 37.8930 },
 ]
 
 export function getCityBySlug(slug: string): City | undefined {
