@@ -1,0 +1,53 @@
+name: Deploy & Auto-Maintenance
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Каждый день в 03:00 UTC — обновление sitemap и пинг поисковиков
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+  daily-maintenance:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ping Yandex sitemap
+        run: |
+          curl -s "https://webmaster.yandex.ru/ping?sitemap=https://specrf.ru/api/sitemap" || true
+
+      - name: Ping Google sitemap
+        run: |
+          curl -s "https://www.google.com/ping?sitemap=https://specrf.ru/api/sitemap" || true
+
+      - name: Revalidate Vercel ISR pages
+        run: |
+          curl -X POST "https://specrf.ru/api/revalidate" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" || true
+
+      - name: Check site health
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://specrf.ru/)
+          echo "Site status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Site returned $STATUS"
+            exit 1
+          fi
