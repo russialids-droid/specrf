@@ -1,17 +1,15 @@
-name: Deploy & Auto-Maintenance
+name: Deploy to Cloudflare Pages
 
 on:
   push:
     branches: [main]
   schedule:
-    # Каждый день в 03:00 UTC — обновление sitemap и пинг поисковиков
     - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,31 +21,21 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SITE_URL: https://specrf.pages.dev
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy out --project-name specrf --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-  daily-maintenance:
+  ping-search-engines:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'schedule'
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Ping Yandex sitemap
+      - name: Ping Yandex
+        run: curl -s "https://webmaster.yandex.ru/ping?sitemap=https://specrf.pages.dev/api/sitemap" || true
+      - name: Ping Google
+        run: curl -s "https://www.google.com/ping?sitemap=https://specrf.pages.dev/api/sitemap" || true
+      - name: Health check
         run: |
-          curl -s "https://webmaster.yandex.ru/ping?sitemap=https://specrf.ru/api/sitemap" || true
-
-      - name: Ping Google sitemap
-        run: |
-          curl -s "https://www.google.com/ping?sitemap=https://specrf.ru/api/sitemap" || true
-
-      - name: Revalidate Vercel ISR pages
-        run: |
-          curl -X POST "https://specrf.ru/api/revalidate" \
-            -H "Authorization: Bearer ${{ secrets.REVALIDATE_SECRET }}" || true
-
-      - name: Check site health
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://specrf.ru/)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://specrf.pages.dev/)
           echo "Site status: $STATUS"
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Site returned $STATUS"
-            exit 1
-          fi
