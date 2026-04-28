@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { CATEGORIES } from '@/data/categories'
 import { CITIES } from '@/data/cities'
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-static'
 export const revalidate = 86400 // раз в сутки
 
 export async function GET() {
