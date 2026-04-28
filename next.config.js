@@ -4,6 +4,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  assetPrefix: 'https://specrf.pages.dev',
 }
 
 module.exports = nextConfig
