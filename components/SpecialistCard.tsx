@@ -18,6 +18,17 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
   const fullStars = Math.floor(s.rating)
   const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars)
 
+  function scrollToForm() {
+    const el = document.getElementById('lead-form')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.style.outline = '3px solid #2563eb'
+      setTimeout(() => { el.style.outline = '' }, 2000)
+      const input = el.querySelector('input') as HTMLInputElement
+      if (input) setTimeout(() => input.focus(), 600)
+    }
+  }
+
   return (
     <div className={`specialist-card${s.is_featured ? ' featured' : ''}`}>
       {s.is_featured && <div className="top-label">⭐ Топ специалист</div>}
@@ -65,47 +76,25 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
             </div>
             <div style={{display:'flex',gap:'0.5rem',alignItems:'center',flexWrap:'wrap'}}>
               {s.phone && (
-                <a href={`tel:${s.phone}`}
-                  style={{
-                    display:'inline-block',
-                    fontSize:'0.75rem',
-                    background:'#fff',
-                    color:'#2563eb',
-                    border:'1px solid #2563eb',
-                    padding:'0.375rem 0.75rem',
-                    borderRadius:'0.5rem',
-                    textDecoration:'none',
-                    fontWeight:500
-                  }}>
+                <a href={`tel:${s.phone}`} style={{
+                  display:'inline-block', fontSize:'0.75rem',
+                  background:'#fff', color:'#2563eb',
+                  border:'1px solid #2563eb',
+                  padding:'0.375rem 0.75rem', borderRadius:'0.5rem',
+                  textDecoration:'none', fontWeight:500
+                }}>
                   📞 {s.phone}
                 </a>
               )}
-              <a
-                href="#форма-заявки"
-                onClick={(e) => {
-                  e.preventDefault()
-                  // Ищем форму на странице
-                  const form = document.querySelector('form')
-                  const input = document.querySelector('input[placeholder*="имя"], input[placeholder*="Александр"]') as HTMLElement
-                  const target = input || form
-                  if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                    setTimeout(() => (target as HTMLInputElement).focus?.(), 500)
-                  }
-                }}
+              <button
+                onClick={scrollToForm}
                 style={{
-                  display:'inline-block',
-                  fontSize:'0.75rem',
-                  background:'#2563eb',
-                  color:'#fff',
-                  padding:'0.375rem 0.75rem',
-                  borderRadius:'0.5rem',
-                  textDecoration:'none',
-                  fontWeight:500,
-                  cursor:'pointer'
+                  fontSize:'0.75rem', background:'#2563eb', color:'#fff',
+                  padding:'0.375rem 0.75rem', borderRadius:'0.5rem',
+                  border:'none', cursor:'pointer', fontWeight:500
                 }}>
                 Оставить заявку
-              </a>
+              </button>
             </div>
           </div>
         </div>
