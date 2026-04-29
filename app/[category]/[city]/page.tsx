@@ -2,22 +2,16 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { CATEGORIES } from '@/data/categories'
 import { CITIES } from '@/data/cities'
-import { generatePageMeta, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema } from '@/lib/seo'
+import { generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema } from '@/lib/seo'
 import LeadForm from '@/components/LeadForm'
 import SpecialistCard from '@/components/SpecialistCard'
 
-interface Props {
-  params: Promise<{ category: string; city: string }>
-}
+interface Props { params: Promise<{ category: string; city: string }> }
 
-// Генерация всех статических путей — 20 категорий × 50 городов = 1000 страниц пилота
 export async function generateStaticParams() {
   const paths: { category: string; city: string }[] = []
-  const pilotCategories = CATEGORIES.slice(0, 20)
-  const pilotCities = CITIES.slice(0, 50)
-
-  for (const cat of pilotCategories) {
-    for (const city of pilotCities) {
+  for (const cat of CATEGORIES.slice(0, 20)) {
+    for (const city of CITIES.slice(0, 55)) {
       paths.push({ category: cat.slug, city: city.slug })
     }
   }
@@ -26,206 +20,146 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category: catSlug, city: citySlug } = await params
-  const category = CATEGORIES.find((c) => c.slug === catSlug)
-  const city = CITIES.find((c) => c.slug === citySlug)
-  if (!category || !city) return {}
-
-  const { title, description } = generatePageMeta(category, city)
-  return {
-    title,
-    description,
-    alternates: { canonical: `https://specrf.ru/${catSlug}/${citySlug}/` },
-    openGraph: { title, description, locale: 'ru_RU', type: 'website' },
-  }
+  const cat = CATEGORIES.find(c => c.slug === catSlug)
+  const city = CITIES.find(c => c.slug === citySlug)
+  if (!cat || !city) return {}
+  const title = `${cat.namePlural} в ${city.namePred} — найти и заказать | СпецРФ`
+  const description = `${cat.namePlural} в ${city.namePred}: ${cat.description}. Проверенные специалисты, отзывы, цены от ${cat.avgPrice} ${cat.priceUnit}.`
+  return { title, description, alternates: { canonical: `https://specrf.pages.dev/${catSlug}/${citySlug}/` } }
 }
 
-// Моковые специалисты — заменяются реальными из Supabase после наполнения БД
-function getMockSpecialists(category: { name: string; avgPrice: string; icon: string }, city: { name: string }, count = 8) {
+function getMockSpecialists(cat: { name: string; avgPrice: string; priceUnit: string }, city: { name: string }, count = 8) {
+  const names = ['Александр Петров','Ирина Смирнова','Дмитрий Козлов','Наталья Иванова','Сергей Волков','Елена Новикова','Андрей Морозов','Татьяна Соколова']
+  const price = parseInt(cat.avgPrice.split('–')[0].replace(/\D/g,''))
   return Array.from({ length: count }, (_, i) => ({
-    id: `mock-${i}`,
-    name: getMockName(i),
+    id: `mock-${i}`, name: names[i % names.length],
     experience_years: 3 + (i * 2) % 15,
-    price_from: parseInt(category.avgPrice.split('–')[0].replace(/\D/g, '')),
-    price_to: parseInt((category.avgPrice.split('–')[1] || category.avgPrice.split('–')[0]).replace(/\D/g, '')),
-    rating: 4.2 + (i % 8) * 0.1,
+    price_from: price, price_to: price * 2,
+    rating: parseFloat((4.2 + (i % 8) * 0.1).toFixed(1)),
     reviews_count: 5 + i * 7,
-    is_featured: i < 2,
-    is_verified: i < 5,
-    description: `Опытный ${category.name.toLowerCase()} в ${city.name}. Индивидуальный подход к каждому клиенту.`,
+    is_featured: i < 2, is_verified: i < 5,
+    description: `Опытный ${cat.name.toLowerCase()} в ${city.name}. Индивидуальный подход к каждому клиенту.`,
     photo_url: null,
   }))
 }
 
-function getMockName(i: number) {
-  const names = ['Александр Петров', 'Ирина Смирнова', 'Дмитрий Козлов', 'Наталья Иванова',
-    'Сергей Волков', 'Елена Новикова', 'Андрей Морозов', 'Татьяна Соколова']
-  return names[i % names.length]
-}
-
 export default async function CityPage({ params }: Props) {
   const { category: catSlug, city: citySlug } = await params
+  const cat = CATEGORIES.find(c => c.slug === catSlug)
+  const city = CITIES.find(c => c.slug === citySlug)
+  if (!cat || !city) notFound()
 
-  const category = CATEGORIES.find((c) => c.slug === catSlug)
-  const city = CITIES.find((c) => c.slug === citySlug)
-  if (!category || !city) notFound()
-
-  const specialists = getMockSpecialists(category, city)
-  const faqSchema = generateFAQSchema(category, city)
-  const breadcrumbSchema = generateBreadcrumbSchema(category, city)
-  const listSchema = generateLocalBusinessSchema(category, city)
-
-  const relatedCategories = CATEGORIES.filter((c) => c.slug !== category.slug).slice(0, 6)
-  const relatedCities = CITIES.filter((c) => c.slug !== city.slug).slice(0, 8)
+  const specialists = getMockSpecialists(cat, city)
+  const faqSchema = generateFAQSchema(cat, city)
+  const breadcrumbSchema = generateBreadcrumbSchema(cat, city)
+  const listSchema = generateLocalBusinessSchema(cat, city)
+  const relatedCats = CATEGORIES.filter(c => c.slug !== cat.slug).slice(0, 6)
+  const relatedCities = CITIES.filter(c => c.slug !== city.slug).slice(0, 8)
 
   return (
     <>
-      {/* Schema.org JSON-LD */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }} />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div style={{maxWidth:'1152px',margin:'0 auto',padding:'2rem 1rem'}}>
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-400 mb-6 flex items-center gap-2 flex-wrap">
-          <a href="/" className="hover:text-blue-600">Главная</a>
-          <span>/</span>
-          <a href={`/${category.slug}`} className="hover:text-blue-600">{category.namePlural}</a>
-          <span>/</span>
-          <span className="text-gray-700">{city.name}</span>
+        <nav style={{fontSize:'0.875rem',color:'#9ca3af',marginBottom:'1.5rem',display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+          <a href="/" style={{color:'#9ca3af'}}>Главная</a><span>/</span>
+          <a href={`/${cat.slug}/`} style={{color:'#9ca3af'}}>{cat.namePlural}</a><span>/</span>
+          <span style={{color:'#111827'}}>{city.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Основной контент */}
-          <div className="lg:col-span-2">
-            {/* H1 */}
-            <div className="mb-6">
-              <h1 className="text-2xl md:text-3xl font-bold mb-3">
-                {category.namePlural} в {city.namePred}
-              </h1>
-              <p className="text-gray-600">
-                Найдите проверенного {category.nameVin} в {city.namePred}. {specialists.length} специалистов
-                в базе — с отзывами, опытом и ценами.
+        <div style={{display:'grid',gridTemplateColumns:'1fr',gap:'2rem'}}>
+          {/* На десктопе — 2 колонки */}
+          <style>{`@media(min-width:1024px){.page-grid{display:grid!important;grid-template-columns:1fr 320px!important;gap:2rem!important}}`}</style>
+          <div className="page-grid" style={{display:'block'}}>
+            {/* Левая колонка */}
+            <div>
+              <h1 style={{fontSize:'1.75rem',fontWeight:700,marginBottom:'0.75rem'}}>{cat.namePlural} в {city.namePred}</h1>
+              <p style={{color:'#4b5563',marginBottom:'0.75rem'}}>
+                Найдите проверенного {cat.nameVin} в {city.namePred}. {specialists.length} специалистов в базе — с отзывами, опытом и ценами.
               </p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <span className="bg-green-50 text-green-700 text-xs px-3 py-1 rounded-full font-medium">
-                  ✓ Проверенные документы
-                </span>
-                <span className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
-                  💰 {category.avgPrice} {category.priceUnit}
-                </span>
-                <span className="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-medium">
-                  ⭐ Реальные отзывы
-                </span>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'0.5rem',marginBottom:'1.5rem'}}>
+                <span style={{background:'#d1fae5',color:'#065f46',fontSize:'0.75rem',padding:'0.2rem 0.75rem',borderRadius:'9999px',fontWeight:500}}>✓ Проверенные документы</span>
+                <span style={{background:'#dbeafe',color:'#1e40af',fontSize:'0.75rem',padding:'0.2rem 0.75rem',borderRadius:'9999px',fontWeight:500}}>💰 {cat.avgPrice} {cat.priceUnit}</span>
+                <span style={{background:'#ede9fe',color:'#5b21b6',fontSize:'0.75rem',padding:'0.2rem 0.75rem',borderRadius:'9999px',fontWeight:500}}>⭐ Реальные отзывы</span>
               </div>
-            </div>
 
-            {/* Специалисты */}
-            <div className="space-y-4 mb-10">
-              {specialists.map((spec, i) => (
-                <SpecialistCard
-                  key={spec.id}
-                  specialist={spec}
-                  category={category}
-                  city={city}
-                />
-              ))}
-            </div>
+              {/* Специалисты */}
+              <div style={{marginBottom:'2rem'}}>
+                {specialists.map(s => <SpecialistCard key={s.id} specialist={s} category={cat} city={city} />)}
+              </div>
 
-            {/* FAQ */}
-            <section className="mb-10">
-              <h2 className="text-xl font-bold mb-4">
-                Частые вопросы о {category.nameRod} в {city.namePred}
-              </h2>
-              <div className="space-y-4">
+              {/* Форма на мобильном */}
+              <div style={{marginBottom:'2rem'}} className="mobile-form">
+                <style>{`.mobile-form{display:block}@media(min-width:1024px){.mobile-form{display:none}}`}</style>
+                <LeadForm categorySlug={cat.slug} citySlug={city.slug} categoryName={cat.nameVin} cityName={city.namePred} />
+              </div>
+
+              {/* FAQ */}
+              <h2 style={{fontSize:'1.25rem',fontWeight:700,marginBottom:'1rem'}}>Частые вопросы о {cat.nameRod} в {city.namePred}</h2>
+              <div style={{marginBottom:'2rem'}}>
                 {faqSchema.mainEntity.map((faq, i) => (
-                  <details key={i} className="bg-white border border-gray-100 rounded-xl group">
-                    <summary className="p-4 cursor-pointer font-medium text-gray-800 hover:text-blue-600 transition-colors list-none flex justify-between items-center">
-                      {faq.name}
-                      <span className="text-gray-400 group-open:rotate-180 transition-transform text-lg">›</span>
-                    </summary>
-                    <div className="px-4 pb-4 text-gray-600 text-sm leading-relaxed">
-                      {faq.acceptedAnswer.text}
-                    </div>
+                  <details key={i} style={{background:'#fff',border:'1px solid #f3f4f6',borderRadius:'0.75rem',marginBottom:'0.5rem'}}>
+                    <summary style={{padding:'1rem',cursor:'pointer',fontWeight:500,listStyle:'none'}}>{faq.name}</summary>
+                    <div style={{padding:'0 1rem 1rem',fontSize:'0.875rem',color:'#4b5563',lineHeight:1.6}}>{faq.acceptedAnswer.text}</div>
                   </details>
                 ))}
               </div>
-            </section>
 
-            {/* SEO-текст уникальный для страницы */}
-            <section className="bg-gray-50 rounded-2xl p-6 text-sm text-gray-600 leading-relaxed">
-              <h2 className="text-base font-semibold text-gray-800 mb-3">
-                О {category.nameRod} в {city.namePred}
-              </h2>
-              <p className="mb-3">
-                {city.name} — {getPopulationText(city.population)} России с населением{' '}
-                {city.population.toLocaleString('ru-RU')} человек. {category.namePlural} в {city.namePred}{' '}
-                работают как в частном порядке, так и в составе крупных компаний и клиник.
-              </p>
-              <p>
-                На СпецРФ вы можете найти {category.nameVin} в {city.namePred}, сравнить цены
-                и отзывы, и оставить заявку не выходя из дома. Все специалисты проходят
-                базовую проверку документов перед размещением.
-              </p>
-            </section>
-
-            {/* Смежные категории */}
-            <section className="mt-8">
-              <h3 className="font-semibold mb-3 text-gray-700">Другие специалисты в {city.namePred}</h3>
-              <div className="flex flex-wrap gap-2">
-                {relatedCategories.map((cat) => (
-                  <a
-                    key={cat.slug}
-                    href={`/${cat.slug}/${city.slug}`}
-                    className="bg-white border border-gray-200 text-sm text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-300 hover:text-blue-600 transition-colors"
-                  >
-                    {cat.icon} {cat.namePlural}
-                  </a>
-                ))}
+              {/* SEO текст */}
+              <div style={{background:'#f9fafb',borderRadius:'1rem',padding:'1.5rem',marginBottom:'1.5rem',fontSize:'0.875rem',color:'#4b5563',lineHeight:1.7}}>
+                <h2 style={{fontSize:'1rem',fontWeight:600,color:'#1f2937',marginBottom:'0.75rem'}}>О {cat.nameRod} в {city.namePred}</h2>
+                <p style={{marginBottom:'0.75rem'}}>
+                  {city.name} — город с населением {city.population.toLocaleString('ru-RU')} человек в регионе {city.region}.
+                  {cat.namePlural} в {city.namePred} работают как частные специалисты, так и в составе компаний.
+                </p>
+                <p>Средняя стоимость услуг — {cat.avgPrice} {cat.priceUnit}. На СпецРФ вы найдёте проверенного {cat.nameVin} в {city.namePred} с реальными отзывами клиентов.</p>
               </div>
-            </section>
 
-            {/* Смежные города */}
-            <section className="mt-6">
-              <h3 className="font-semibold mb-3 text-gray-700">{category.namePlural} в других городах</h3>
-              <div className="flex flex-wrap gap-2">
-                {relatedCities.map((c) => (
-                  <a
-                    key={c.slug}
-                    href={`/${category.slug}/${c.slug}`}
-                    className="bg-white border border-gray-200 text-sm text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-300 hover:text-blue-600 transition-colors"
-                  >
-                    {c.name}
-                  </a>
-                ))}
+              {/* Смежные категории */}
+              <div style={{marginBottom:'1.5rem'}}>
+                <h3 style={{fontWeight:600,marginBottom:'0.75rem',color:'#374151',fontSize:'0.9rem'}}>Другие специалисты в {city.namePred}</h3>
+                <div style={{display:'flex',flexWrap:'wrap',gap:'0.5rem'}}>
+                  {relatedCats.map(c => (
+                    <a key={c.slug} href={`/${c.slug}/${city.slug}/`}
+                      style={{background:'#fff',border:'1px solid #e5e7eb',fontSize:'0.8125rem',color:'#4b5563',padding:'0.375rem 0.875rem',borderRadius:'0.5rem'}}>
+                      {c.icon} {c.namePlural}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </section>
-          </div>
 
-          {/* Сайдбар — форма заявки */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-20">
-              <LeadForm
-                categorySlug={category.slug}
-                citySlug={city.slug}
-                categoryName={category.nameVin}
-                cityName={city.namePred}
-              />
+              {/* Смежные города */}
+              <div>
+                <h3 style={{fontWeight:600,marginBottom:'0.75rem',color:'#374151',fontSize:'0.9rem'}}>{cat.namePlural} в других городах</h3>
+                <div style={{display:'flex',flexWrap:'wrap',gap:'0.5rem'}}>
+                  {relatedCities.map(c => (
+                    <a key={c.slug} href={`/${cat.slug}/${c.slug}/`}
+                      style={{background:'#fff',border:'1px solid #e5e7eb',fontSize:'0.8125rem',color:'#4b5563',padding:'0.375rem 0.875rem',borderRadius:'0.5rem'}}>
+                      {c.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-              {/* Мини-статистика */}
-              <div className="bg-white border border-gray-100 rounded-xl p-4 mt-4">
-                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wide font-medium">О городе</p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Регион</span>
-                    <span className="font-medium text-gray-800">{city.region}</span>
+            {/* Правая колонка — форма (десктоп) */}
+            <div className="desktop-sidebar">
+              <style>{`.desktop-sidebar{display:none}@media(min-width:1024px){.desktop-sidebar{display:block}}`}</style>
+              <div style={{position:'sticky',top:'80px'}}>
+                <LeadForm categorySlug={cat.slug} citySlug={city.slug} categoryName={cat.nameVin} cityName={city.namePred} />
+                <div style={{background:'#fff',border:'1px solid #f3f4f6',borderRadius:'0.75rem',padding:'1rem',marginTop:'1rem'}}>
+                  <p style={{fontSize:'0.75rem',color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:500,marginBottom:'0.75rem'}}>О городе</p>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.875rem',marginBottom:'0.5rem'}}>
+                    <span style={{color:'#6b7280'}}>Регион</span><span style={{fontWeight:500}}>{city.region}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Население</span>
-                    <span className="font-medium text-gray-800">{(city.population / 1000).toFixed(0)} тыс.</span>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.875rem',marginBottom:'0.5rem'}}>
+                    <span style={{color:'#6b7280'}}>Население</span><span style={{fontWeight:500}}>{(city.population/1000).toFixed(0)} тыс.</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Специалистов</span>
-                    <span className="font-medium text-gray-800">{specialists.length}+</span>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.875rem'}}>
+                    <span style={{color:'#6b7280'}}>Специалистов</span><span style={{fontWeight:500}}>{specialists.length}+</span>
                   </div>
                 </div>
               </div>
@@ -235,11 +169,4 @@ export default async function CityPage({ params }: Props) {
       </div>
     </>
   )
-}
-
-function getPopulationText(population: number): string {
-  if (population > 1000000) return 'один из крупнейших городов'
-  if (population > 500000) return 'крупный город'
-  if (population > 200000) return 'город'
-  return 'город'
 }
