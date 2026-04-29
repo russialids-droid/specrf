@@ -62,18 +62,49 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
                 </>
               )}
             </div>
-            <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
-              {s.phone ? (
+            <div style={{display:'flex',gap:'0.5rem',alignItems:'center',flexWrap:'wrap'}}>
+              {s.phone && (
                 <a href={`tel:${s.phone}`}
-                  style={{fontSize:'0.75rem',background:'#2563eb',color:'#fff',padding:'0.375rem 0.75rem',borderRadius:'0.5rem',textDecoration:'none',fontWeight:500}}>
-                  📞 Позвонить
-                </a>
-              ) : (
-                <a href="#lead-form"
-                  style={{fontSize:'0.75rem',background:'#2563eb',color:'#fff',padding:'0.375rem 0.75rem',borderRadius:'0.5rem',textDecoration:'none',fontWeight:500}}>
-                  Оставить заявку
+                  style={{
+                    display:'inline-block',
+                    fontSize:'0.75rem',
+                    background:'#fff',
+                    color:'#2563eb',
+                    border:'1px solid #2563eb',
+                    padding:'0.375rem 0.75rem',
+                    borderRadius:'0.5rem',
+                    textDecoration:'none',
+                    fontWeight:500
+                  }}>
+                  📞 {s.phone}
                 </a>
               )}
+              <a
+                href="#форма-заявки"
+                onClick={(e) => {
+                  e.preventDefault()
+                  // Ищем форму на странице
+                  const form = document.querySelector('form')
+                  const input = document.querySelector('input[placeholder*="имя"], input[placeholder*="Александр"]') as HTMLElement
+                  const target = input || form
+                  if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    setTimeout(() => (target as HTMLInputElement).focus?.(), 500)
+                  }
+                }}
+                style={{
+                  display:'inline-block',
+                  fontSize:'0.75rem',
+                  background:'#2563eb',
+                  color:'#fff',
+                  padding:'0.375rem 0.75rem',
+                  borderRadius:'0.5rem',
+                  textDecoration:'none',
+                  fontWeight:500,
+                  cursor:'pointer'
+                }}>
+                Оставить заявку
+              </a>
             </div>
           </div>
         </div>
