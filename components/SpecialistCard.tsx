@@ -1,3 +1,4 @@
+'use client'
 import type { Category } from '@/data/categories'
 import type { City } from '@/data/cities'
 
