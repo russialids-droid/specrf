@@ -1,5 +1,10 @@
+'use client'
+import { useState } from 'react'
 import type { Category } from '@/data/categories'
 import type { City } from '@/data/cities'
+
+const SUPABASE_URL = 'https://brxhvfmqhuivyimcmycy.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyeGh2Zm1xaHVpdnlpbWNteWN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjE5MzgsImV4cCI6MjA5MjkzNzkzOH0.70HfIHd-HMaq1HthDf5U0qZIlW27iq6ijPnVEz40mpI'
 
 interface SpecialistProps {
   specialist: {
@@ -12,41 +17,111 @@ interface SpecialistProps {
   city: City
 }
 
-export default function SpecialistCard({ specialist: s, category }: SpecialistProps) {
+function Modal({ specialist, category, onClose }: { specialist: SpecialistProps['specialist'], category: Category, onClose: () => void }) {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'>('idle')
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus('loading')
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          name, phone, message,
+          category_slug: category.slug,
+          city_slug: specialist.id.includes('mock') ? 'moskva' : category.slug,
+          source_url: window.location.href
+        })
+      })
+      setStatus(r.ok ? 'success' : 'error')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  return (
+    <div onClick={onClose} style={{
+      position:'fixed', inset:0, background:'rgba(0,0,0,0.55)',
+      zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center'
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background:'#fff', borderRadius:'1rem', padding:'2rem',
+        maxWidth:'420px', width:'90%', position:'relative'
+      }}>
+        <button onClick={onClose} style={{
+          position:'absolute', top:'1rem', right:'1rem',
+          background:'none', border:'none', fontSize:'1.5rem',
+          cursor:'pointer', color:'#9ca3af', lineHeight:1
+        }}>×</button>
+
+        {status === 'success' ? (
+          <div style={{textAlign:'center', padding:'1rem'}}>
+            <div style={{fontSize:'3rem', marginBottom:'1rem'}}>✅</div>
+            <div style={{fontWeight:700, fontSize:'1.1rem', marginBottom:'0.5rem'}}>Заявка отправлена!</div>
+            <div style={{color:'#6b7280', fontSize:'0.875rem'}}>Специалист свяжется с вами в течение часа</div>
+            <button onClick={onClose} style={{
+              marginTop:'1.5rem', background:'#2563eb', color:'#fff',
+              border:'none', borderRadius:'0.75rem', padding:'0.75rem 2rem',
+              cursor:'pointer', fontWeight:600
+            }}>Закрыть</button>
+          </div>
+        ) : (
+          <>
+            <div style={{fontWeight:700, fontSize:'1.1rem', marginBottom:'0.25rem'}}>Оставить заявку</div>
+            <div style={{color:'#6b7280', fontSize:'0.875rem', marginBottom:'1.25rem'}}>{specialist.name} — {category.name}</div>
+            <form onSubmit={submit}>
+              <input value={name} onChange={e=>setName(e.target.value)} required
+                placeholder="Ваше имя" style={{
+                  width:'100%', border:'1px solid #e5e7eb', borderRadius:'0.75rem',
+                  padding:'0.75rem 1rem', fontSize:'1rem', marginBottom:'0.75rem',
+                  boxSizing:'border-box' as any, fontFamily:'inherit', outline:'none'
+                }} />
+              <input value={phone} onChange={e=>setPhone(e.target.value)} required
+                type="tel" placeholder="+7 (999) 123-45-67" style={{
+                  width:'100%', border:'1px solid #e5e7eb', borderRadius:'0.75rem',
+                  padding:'0.75rem 1rem', fontSize:'1rem', marginBottom:'0.75rem',
+                  boxSizing:'border-box' as any, fontFamily:'inherit', outline:'none'
+                }} />
+              <textarea value={message} onChange={e=>setMessage(e.target.value)}
+                placeholder="Опишите задачу..." rows={3} style={{
+                  width:'100%', border:'1px solid #e5e7eb', borderRadius:'0.75rem',
+                  padding:'0.75rem 1rem', fontSize:'1rem', marginBottom:'0.75rem',
+                  boxSizing:'border-box' as any, fontFamily:'inherit', outline:'none', resize:'none'
+                }} />
+              {status === 'error' && <div style={{color:'#ef4444', fontSize:'0.8rem', marginBottom:'0.5rem'}}>Ошибка. Попробуйте ещё раз.</div>}
+              <button type="submit" disabled={status==='loading'} style={{
+                width:'100%', background:'#2563eb', color:'#fff',
+                border:'none', borderRadius:'0.75rem', padding:'0.875rem',
+                fontSize:'1rem', fontWeight:600, cursor:'pointer'
+              }}>
+                {status === 'loading' ? 'Отправляем...' : 'Отправить заявку'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function SpecialistCard({ specialist: s, category, city }: SpecialistProps) {
+  const [showModal, setShowModal] = useState(false)
   const initials = s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
   const fullStars = Math.floor(s.rating)
   const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars)
-  const modalId = `modal-${s.id}`
 
   return (
     <>
-      {/* CSS-only модальное окно */}
-      <style>{`
-        #${modalId}:target { display:flex!important; }
-        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
-        .modal-box { background:#fff; border-radius:1rem; padding:2rem; max-width:420px; width:90%; position:relative; }
-        .modal-close { position:absolute; top:1rem; right:1rem; font-size:1.5rem; text-decoration:none; color:#9ca3af; line-height:1; }
-        .modal-title { font-size:1.25rem; font-weight:700; margin-bottom:0.25rem; }
-        .modal-sub { font-size:0.875rem; color:#6b7280; margin-bottom:1.5rem; }
-        .modal-input { width:100%; border:1px solid #e5e7eb; border-radius:0.75rem; padding:0.75rem 1rem; font-size:1rem; margin-bottom:0.75rem; box-sizing:border-box; font-family:inherit; }
-        .modal-btn { width:100%; background:#2563eb; color:#fff; border:none; border-radius:0.75rem; padding:0.875rem; font-size:1rem; font-weight:600; cursor:pointer; }
-      `}</style>
-
-      <div id={modalId} className="modal-overlay">
-        <div className="modal-box">
-          <a href="#" className="modal-close">×</a>
-          <div className="modal-title">Оставить заявку</div>
-          <div className="modal-sub">{s.name} — {category.name}</div>
-          <form action="/api/leads" method="POST">
-            <input type="hidden" name="category_slug" value={category.slug} />
-            <input type="hidden" name="specialist" value={s.name} />
-            <input className="modal-input" type="text" name="name" placeholder="Ваше имя" required />
-            <input className="modal-input" type="tel" name="phone" placeholder="+7 (999) 123-45-67" required />
-            <textarea className="modal-input" name="message" placeholder="Опишите задачу..." rows={3} style={{resize:'none'}} />
-            <button className="modal-btn" type="submit">Отправить заявку</button>
-          </form>
-        </div>
-      </div>
+      {showModal && <Modal specialist={s} category={category} onClose={() => setShowModal(false)} />}
 
       <div className={`specialist-card${s.is_featured ? ' featured' : ''}`}>
         {s.is_featured && <div className="top-label">⭐ Топ специалист</div>}
@@ -60,51 +135,39 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
                   {s.is_verified && <span style={{color:'#2563eb',marginLeft:'4px',fontSize:'0.875rem'}}>✓</span>}
                 </div>
                 <div className="specialist-meta">
-                  {category.name}
-                  {s.experience_years > 0 && ` · Опыт ${s.experience_years} лет`}
+                  {category.name}{s.experience_years > 0 && ` · Опыт ${s.experience_years} лет`}
                 </div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
                 {s.price_from > 0 ? (
-                  <>
-                    <div className="price">от {s.price_from.toLocaleString('ru-RU')} ₽</div>
-                    <div className="price-unit">{category.priceUnit}</div>
-                  </>
+                  <><div className="price">от {s.price_from.toLocaleString('ru-RU')} ₽</div><div className="price-unit">{category.priceUnit}</div></>
                 ) : (
                   <div style={{fontSize:'0.8rem',color:'#9ca3af'}}>Цена по запросу</div>
                 )}
               </div>
             </div>
-
-            {s.description && (
-              <div className="specialist-desc" style={{marginTop:'0.5rem'}}>{s.description}</div>
-            )}
-
+            {s.description && <div className="specialist-desc" style={{marginTop:'0.5rem'}}>{s.description}</div>}
             <div className="specialist-footer" style={{marginTop:'0.75rem'}}>
               <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
                 {s.rating > 0 && (
-                  <>
-                    <span className="stars">{stars}</span>
-                    <span style={{fontSize:'0.875rem',fontWeight:500}}>{s.rating.toFixed(1)}</span>
-                    {s.reviews_count > 0 && (
-                      <span className="rating-count">({s.reviews_count} отзывов)</span>
-                    )}
-                  </>
+                  <><span className="stars">{stars}</span>
+                  <span style={{fontSize:'0.875rem',fontWeight:500}}>{s.rating.toFixed(1)}</span>
+                  {s.reviews_count > 0 && <span className="rating-count">({s.reviews_count} отзывов)</span>}</>
                 )}
               </div>
               <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
                 {s.phone && (
                   <a href={`tel:${s.phone}`} style={{
-                    fontSize:'0.75rem', background:'#fff', color:'#2563eb',
-                    border:'1px solid #2563eb', padding:'0.375rem 0.75rem',
-                    borderRadius:'0.5rem', textDecoration:'none', fontWeight:500
+                    fontSize:'0.75rem',background:'#fff',color:'#2563eb',
+                    border:'1px solid #2563eb',padding:'0.375rem 0.75rem',
+                    borderRadius:'0.5rem',textDecoration:'none',fontWeight:500
                   }}>📞 {s.phone}</a>
                 )}
-                <a href={`#${modalId}`} style={{
-                  fontSize:'0.75rem', background:'#2563eb', color:'#fff',
-                  padding:'0.375rem 0.75rem', borderRadius:'0.5rem',
-                  textDecoration:'none', fontWeight:500
-                }}>Оставить заявку</a>
+                <button onClick={() => setShowModal(true)} style={{
+                  fontSize:'0.75rem',background:'#2563eb',color:'#fff',
+                  padding:'0.375rem 0.75rem',borderRadius:'0.5rem',
+                  border:'none',cursor:'pointer',fontWeight:500
+                }}>Оставить заявку</button>
               </div>
             </div>
           </div>
