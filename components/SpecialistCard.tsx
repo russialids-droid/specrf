@@ -6,6 +6,10 @@ import type { City } from '@/data/cities'
 const SUPABASE_URL = 'https://brxhvfmqhuivyimcmycy.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyeGh2Zm1xaHVpdnlpbWNteWN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjE5MzgsImV4cCI6MjA5MjkzNzkzOH0.70HfIHd-HMaq1HthDf5U0qZIlW27iq6ijPnVEz40mpI'
 
+// Токен бота добавим после создания
+const TG_BOT_TOKEN = process.env.NEXT_PUBLIC_TG_BOT_TOKEN || ''
+const TG_CHAT_ID = process.env.NEXT_PUBLIC_TG_CHAT_ID || ''
+
 interface SpecialistProps {
   specialist: {
     id: string; name: string; experience_years: number
@@ -17,7 +21,12 @@ interface SpecialistProps {
   city: City
 }
 
-function Modal({ specialist, category, onClose }: { specialist: SpecialistProps['specialist'], category: Category, onClose: () => void }) {
+function Modal({ specialist, category, city, onClose }: {
+  specialist: SpecialistProps['specialist']
+  category: Category
+  city: City
+  onClose: () => void
+}) {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [message, setMessage] = useState('')
@@ -26,8 +35,10 @@ function Modal({ specialist, category, onClose }: { specialist: SpecialistProps[
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setStatus('loading')
+
     try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+      // 1. Сохраняем лид в Supabase
+      await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -38,11 +49,35 @@ function Modal({ specialist, category, onClose }: { specialist: SpecialistProps[
         body: JSON.stringify({
           name, phone, message,
           category_slug: category.slug,
-          city_slug: specialist.id.includes('mock') ? 'moskva' : category.slug,
+          city_slug: city.slug,
           source_url: window.location.href
         })
       })
-      setStatus(r.ok ? 'success' : 'error')
+
+      // 2. Отправляем уведомление в Telegram (владельцу)
+      if (TG_BOT_TOKEN && TG_CHAT_ID) {
+        const tgText = `🔔 *Новая заявка с СпецРФ*\n\n` +
+          `👤 Клиент: ${name}\n` +
+          `📞 Телефон: ${phone}\n` +
+          `🔧 Специалист: ${specialist.name}\n` +
+          `📂 Категория: ${category.name}\n` +
+          `🏙️ Город: ${city.name}\n` +
+          `${message ? `💬 Сообщение: ${message}\n` : ''}` +
+          `${specialist.phone ? `📱 Телефон специалиста: ${specialist.phone}\n` : ''}` +
+          `🌐 Страница: ${window.location.href}`
+
+        await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TG_CHAT_ID,
+            text: tgText,
+            parse_mode: 'Markdown'
+          })
+        })
+      }
+
+      setStatus('success')
     } catch {
       setStatus('error')
     }
@@ -55,7 +90,8 @@ function Modal({ specialist, category, onClose }: { specialist: SpecialistProps[
     }}>
       <div onClick={e => e.stopPropagation()} style={{
         background:'#fff', borderRadius:'1rem', padding:'2rem',
-        maxWidth:'420px', width:'90%', position:'relative'
+        maxWidth:'420px', width:'90%', position:'relative',
+        maxHeight:'90vh', overflowY:'auto'
       }}>
         <button onClick={onClose} style={{
           position:'absolute', top:'1rem', right:'1rem',
@@ -67,17 +103,29 @@ function Modal({ specialist, category, onClose }: { specialist: SpecialistProps[
           <div style={{textAlign:'center', padding:'1rem'}}>
             <div style={{fontSize:'3rem', marginBottom:'1rem'}}>✅</div>
             <div style={{fontWeight:700, fontSize:'1.1rem', marginBottom:'0.5rem'}}>Заявка отправлена!</div>
-            <div style={{color:'#6b7280', fontSize:'0.875rem'}}>Специалист свяжется с вами в течение часа</div>
+            <div style={{color:'#6b7280', fontSize:'0.875rem', marginBottom:'1rem'}}>
+              Специалист свяжется с вами в ближайшее время
+            </div>
+            {specialist.phone && (
+              <div style={{background:'#eff6ff', borderRadius:'0.75rem', padding:'1rem', marginBottom:'1rem'}}>
+                <div style={{fontSize:'0.875rem', color:'#4b5563', marginBottom:'0.5rem'}}>Или позвоните сами:</div>
+                <a href={`tel:${specialist.phone}`} style={{
+                  fontWeight:700, color:'#2563eb', fontSize:'1.1rem', textDecoration:'none'
+                }}>📞 {specialist.phone}</a>
+              </div>
+            )}
             <button onClick={onClose} style={{
-              marginTop:'1.5rem', background:'#2563eb', color:'#fff',
-              border:'none', borderRadius:'0.75rem', padding:'0.75rem 2rem',
+              background:'#2563eb', color:'#fff', border:'none',
+              borderRadius:'0.75rem', padding:'0.75rem 2rem',
               cursor:'pointer', fontWeight:600
             }}>Закрыть</button>
           </div>
         ) : (
           <>
             <div style={{fontWeight:700, fontSize:'1.1rem', marginBottom:'0.25rem'}}>Оставить заявку</div>
-            <div style={{color:'#6b7280', fontSize:'0.875rem', marginBottom:'1.25rem'}}>{specialist.name} — {category.name}</div>
+            <div style={{color:'#6b7280', fontSize:'0.875rem', marginBottom:'1.25rem'}}>
+              {specialist.name} — {category.name} в {city.namePred}
+            </div>
             <form onSubmit={submit}>
               <input value={name} onChange={e=>setName(e.target.value)} required
                 placeholder="Ваше имя" style={{
@@ -92,12 +140,17 @@ function Modal({ specialist, category, onClose }: { specialist: SpecialistProps[
                   boxSizing:'border-box' as any, fontFamily:'inherit', outline:'none'
                 }} />
               <textarea value={message} onChange={e=>setMessage(e.target.value)}
-                placeholder="Опишите задачу..." rows={3} style={{
+                placeholder="Опишите задачу (необязательно)..." rows={3} style={{
                   width:'100%', border:'1px solid #e5e7eb', borderRadius:'0.75rem',
                   padding:'0.75rem 1rem', fontSize:'1rem', marginBottom:'0.75rem',
-                  boxSizing:'border-box' as any, fontFamily:'inherit', outline:'none', resize:'none'
+                  boxSizing:'border-box' as any, fontFamily:'inherit',
+                  outline:'none', resize:'none'
                 }} />
-              {status === 'error' && <div style={{color:'#ef4444', fontSize:'0.8rem', marginBottom:'0.5rem'}}>Ошибка. Попробуйте ещё раз.</div>}
+              {status === 'error' && (
+                <div style={{color:'#ef4444', fontSize:'0.8rem', marginBottom:'0.5rem'}}>
+                  Ошибка. Попробуйте ещё раз.
+                </div>
+              )}
               <button type="submit" disabled={status==='loading'} style={{
                 width:'100%', background:'#2563eb', color:'#fff',
                 border:'none', borderRadius:'0.75rem', padding:'0.875rem',
@@ -105,6 +158,10 @@ function Modal({ specialist, category, onClose }: { specialist: SpecialistProps[
               }}>
                 {status === 'loading' ? 'Отправляем...' : 'Отправить заявку'}
               </button>
+              <div style={{fontSize:'0.75rem', color:'#9ca3af', textAlign:'center', marginTop:'0.75rem'}}>
+                Нажимая кнопку, вы соглашаетесь с{' '}
+                <a href="/privacy/" style={{color:'#9ca3af'}}>политикой конфиденциальности</a>
+              </div>
             </form>
           </>
         )}
@@ -121,8 +178,9 @@ export default function SpecialistCard({ specialist: s, category, city }: Specia
 
   return (
     <>
-      {showModal && <Modal specialist={s} category={category} onClose={() => setShowModal(false)} />}
-
+      {showModal && (
+        <Modal specialist={s} category={category} city={city} onClose={() => setShowModal(false)} />
+      )}
       <div className={`specialist-card${s.is_featured ? ' featured' : ''}`}>
         {s.is_featured && <div className="top-label">⭐ Топ специалист</div>}
         <div className="inner">
