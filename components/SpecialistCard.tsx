@@ -7,16 +7,30 @@ interface SpecialistProps {
     id: string; name: string; experience_years: number
     price_from: number; price_to: number; rating: number
     reviews_count: number; is_featured: boolean; is_verified: boolean
-    description: string; photo_url: string | null
+    description: string; photo_url: string | null; phone?: string | null
   }
   category: Category
   city: City
 }
 
 export default function SpecialistCard({ specialist: s, category }: SpecialistProps) {
-  const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2)
+  const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
   const fullStars = Math.floor(s.rating)
   const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars)
+
+  function handleContact() {
+    if (s.phone) {
+      window.location.href = `tel:${s.phone}`
+    } else {
+      const form = document.getElementById('lead-form')
+      if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Подсвечиваем форму
+        form.style.boxShadow = '0 0 0 3px #2563eb'
+        setTimeout(() => { form.style.boxShadow = '' }, 2000)
+      }
+    }
+  }
 
   return (
     <div className={`specialist-card${s.is_featured ? ' featured' : ''}`}>
@@ -24,25 +38,60 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
       <div className="inner">
         <div className="specialist-avatar">{initials}</div>
         <div className="specialist-info">
-          <div className="specialist-name">
-            {s.name}{s.is_verified && <span style={{color:'#2563eb',marginLeft:'4px'}}>✓</span>}
-          </div>
-          <div className="specialist-meta">{category.name} · Опыт {s.experience_years} лет</div>
-          <div className="specialist-desc">{s.description}</div>
-          <div className="specialist-footer">
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'0.5rem'}}>
             <div>
-              <span className="stars">{stars}</span>
-              <span style={{fontSize:'0.875rem',fontWeight:500,marginLeft:'4px'}}>{s.rating.toFixed(1)}</span>
-              <span className="rating-count">({s.reviews_count} отзывов)</span>
+              <div className="specialist-name">
+                {s.name}
+                {s.is_verified && <span style={{color:'#2563eb',marginLeft:'4px',fontSize:'0.875rem'}}>✓</span>}
+              </div>
+              <div className="specialist-meta">
+                {category.name}
+                {s.experience_years > 0 && ` · Опыт ${s.experience_years} лет`}
+              </div>
             </div>
-            <button className="btn-contact" onClick={() => document.getElementById('lead-form')?.scrollIntoView({behavior:'smooth'})}>
-              Связаться
-            </button>
+            <div className="specialist-price" style={{textAlign:'right',flexShrink:0}}>
+              {s.price_from > 0 ? (
+                <>
+                  <div className="price">от {s.price_from.toLocaleString('ru-RU')} ₽</div>
+                  <div className="price-unit">{category.priceUnit}</div>
+                </>
+              ) : (
+                <div style={{fontSize:'0.8rem',color:'#9ca3af'}}>Цена по запросу</div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="specialist-price">
-          <div className="price">от {s.price_from.toLocaleString('ru-RU')} ₽</div>
-          <div className="price-unit">{category.priceUnit}</div>
+
+          {s.description && (
+            <div className="specialist-desc" style={{marginTop:'0.5rem'}}>{s.description}</div>
+          )}
+
+          <div className="specialist-footer" style={{marginTop:'0.75rem'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+              {s.rating > 0 && (
+                <>
+                  <span className="stars">{stars}</span>
+                  <span style={{fontSize:'0.875rem',fontWeight:500}}>{s.rating.toFixed(1)}</span>
+                  {s.reviews_count > 0 && (
+                    <span className="rating-count">({s.reviews_count} отзывов)</span>
+                  )}
+                </>
+              )}
+            </div>
+            <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
+              {s.phone && (
+                <a href={`tel:${s.phone}`}
+                  style={{fontSize:'0.75rem',color:'#2563eb',fontWeight:500,textDecoration:'none'}}>
+                  📞 {s.phone}
+                </a>
+              )}
+              <button
+                className="btn-contact"
+                onClick={handleContact}
+              >
+                {s.phone ? 'Позвонить' : 'Оставить заявку'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
