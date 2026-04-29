@@ -1,4 +1,3 @@
-'use client'
 import type { Category } from '@/data/categories'
 import type { City } from '@/data/cities'
 
@@ -14,23 +13,9 @@ interface SpecialistProps {
 }
 
 export default function SpecialistCard({ specialist: s, category }: SpecialistProps) {
-  const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  const initials = s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
   const fullStars = Math.floor(s.rating)
   const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars)
-
-  function handleContact() {
-    if (s.phone) {
-      window.location.href = `tel:${s.phone}`
-    } else {
-      const form = document.getElementById('lead-form')
-      if (form) {
-        form.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        // Подсвечиваем форму
-        form.style.boxShadow = '0 0 0 3px #2563eb'
-        setTimeout(() => { form.style.boxShadow = '' }, 2000)
-      }
-    }
-  }
 
   return (
     <div className={`specialist-card${s.is_featured ? ' featured' : ''}`}>
@@ -49,7 +34,7 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
                 {s.experience_years > 0 && ` · Опыт ${s.experience_years} лет`}
               </div>
             </div>
-            <div className="specialist-price" style={{textAlign:'right',flexShrink:0}}>
+            <div style={{textAlign:'right',flexShrink:0}}>
               {s.price_from > 0 ? (
                 <>
                   <div className="price">от {s.price_from.toLocaleString('ru-RU')} ₽</div>
@@ -78,18 +63,17 @@ export default function SpecialistCard({ specialist: s, category }: SpecialistPr
               )}
             </div>
             <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
-              {s.phone && (
+              {s.phone ? (
                 <a href={`tel:${s.phone}`}
-                  style={{fontSize:'0.75rem',color:'#2563eb',fontWeight:500,textDecoration:'none'}}>
-                  📞 {s.phone}
+                  style={{fontSize:'0.75rem',background:'#2563eb',color:'#fff',padding:'0.375rem 0.75rem',borderRadius:'0.5rem',textDecoration:'none',fontWeight:500}}>
+                  📞 Позвонить
+                </a>
+              ) : (
+                <a href="#lead-form"
+                  style={{fontSize:'0.75rem',background:'#2563eb',color:'#fff',padding:'0.375rem 0.75rem',borderRadius:'0.5rem',textDecoration:'none',fontWeight:500}}>
+                  Оставить заявку
                 </a>
               )}
-              <button
-                className="btn-contact"
-                onClick={handleContact}
-              >
-                {s.phone ? 'Позвонить' : 'Оставить заявку'}
-              </button>
             </div>
           </div>
         </div>
